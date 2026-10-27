@@ -20,13 +20,13 @@ Every commit message must follow this structure:
 ```
 <title>
 
-<description>
+<description>           (optional)
 
-Close #<issue number>
+Close #<issue number>   (optional)
 ```
 
 - **Title**: one line summarizing the change.
-- **Description**: what changed and why. Required.
+- **Description**: optional. What changed and why.
 - **Close #N**: optional. Add it when the commit resolves a GitHub issue; the issue closes automatically when the commit reaches `main`.
 
 Example:
@@ -42,7 +42,7 @@ Close #12
 ### How it works
 
 - `git commit` (without `-m`) opens the template [`.gitmessage`](.gitmessage) in your editor. Lines starting with `#` are hints and are removed automatically.
-- The hook [`.githooks/commit-msg`](.githooks/commit-msg) checks every commit, including `git commit -m`. If the title, the blank second line, or the description is missing, the commit is rejected with a message explaining why. Merge and revert commits are skipped.
+- The hook [`.githooks/commit-msg`](.githooks/commit-msg) checks every commit, including `git commit -m`. If the title is missing or the second line is not blank, the commit is rejected with a message explaining why.
 
 ### Manual setup
 

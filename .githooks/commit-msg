@@ -1,11 +1,7 @@
 #!/usr/bin/env bash
-# Format: <title>, blank line, <description>, optional "Close #<issue>". See .gitmessage.
+# Format: <title>, then optional blank line + <description> and/or "Close #<issue>". See .gitmessage.
 msg=$(grep -v '^#' "$1")
-title=$(sed -n 1p <<<"$msg")
-[[ $title =~ ^(Merge|Revert) ]] && exit 0
 
 fail() { echo "✖ Commit message: $1 (see .gitmessage)" >&2; exit 1; }
-[[ -n $title ]] || fail "title is required"
+[[ -n $(sed -n 1p <<<"$msg") ]] || fail "title is required"
 [[ -z $(sed -n 2p <<<"$msg") ]] || fail "line 2 must be blank"
-body=$(sed -n '3,$p' <<<"$msg" | grep -v '^Close #[0-9]*$')
-[[ -n ${body//[[:space:]]/} ]] || fail "description is required"
