@@ -12,9 +12,9 @@ This document describes what the product must do and how users interact with it.
 
 ### 1.3 Document Status and Revision History
 
-| Version | Date | Author | Change |
-|---|---|---|---|
-| 0.1 | 2026-10-27 | Zhimin Gan | Initial version of the PRD |
+| Version | Date       | Author     | Change                     |
+| ------- | ---------- | ---------- | -------------------------- |
+| 0.1     | 2026-10-27 | Zhimin Gan | Initial version of the PRD |
 
 ### 1.4 Key Concepts
 
@@ -262,14 +262,53 @@ The Core Module is the shared execution engine used by both the local CLI and th
 
 ---
 
-## 6. UI and CLI Overview
+## 6. MoSCoW Prioritization
 
-### 6.1 Web Pages
+### 6.1 Priority Definitions
+
+- **Must**: Required for this version to be considered complete; the core execution path and every capability backed by a Must user story in Section 4.3.
+- **Should**: Planned for this version and important to the product experience, but the platform still functions end-to-end without it.
+- **Could**: Desirable enhancements to pursue if time allows after all Must and Should items are delivered.
+- **Won't**: Explicitly out of scope for this version (see Section 3.2 Non-Goals).
+
+### 6.2 Prioritization Table
+
+| Priority | Requirement                                                        | PRD Section | Rationale                                                                                                                                                                                                                                                           |
+| -------- | ------------------------------------------------------------------ | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Must     | YAML Syntax Definition & Syntax/Validity Check                     | 5.1.1       | Foundation of every Test Case; required by US-4.3.1 and the Validation Accuracy metric.                                                                                                                                                                             |
+| Must     | Jev Harness (Input & Prompt Assembly, Formatted Output Handling)   | 5.1.2       | The only runtime AI component; all Visual/DOM Locate and Jev assertions depend on it.                                                                                                                                                                               |
+| Must     | Browser Lifecycle and Page Inspection                              | 5.1.3       | Provides the browser instance, screenshots, and DOM element list consumed by the Locator, Assertion, and Report modules.                                                                                                                                            |
+| Must     | Multi-Stage Element Locator (`xpath` → Visual Locate → DOM Locate) | 5.1.4       | Core product value of resilient, low-cost locating; required by US-4.3.2.                                                                                                                                                                                           |
+| Must     | Step Execution (Playwright Actions and Assertions)                 | 5.1.5       | Without action execution and assertion judging, no Test Case can run.                                                                                                                                                                                               |
+| Must     | Report Generation (`.json` report)                                 | 5.1.6       | Required output of every Run for both the CLI and the Web UI.                                                                                                                                                                                                       |
+| Must     | Overall Execution Pipeline (Core Workflow)                         | 5.1.7       | Connects all Core sub-modules into a working end-to-end runner.                                                                                                                                                                                                     |
+| Must     | CLI Local Validate & Run                                           | 5.2         | Primary entry point for Developers and External Agents; required by US-4.3.6.                                                                                                                                                                                       |
+| Must     | CLI Persistent JSON Report, Playwright Trace & Error Output        | 5.2         | Enables local debugging and lets External Agents read results to repair tests; required by US-4.3.6.                                                                                                                                                                |
+| Must     | Server-Side Test Execution with Run Queue and Live Progress Push   | 5.3.1       | Powers the Web UI **Run** flow and queued concurrent runs; required by US-4.3.4.                                                                                                                                                                                    |
+| Must     | Test File Storage (`Project -> Module -> Test File`)               | 5.3.2       | Persists the test suite hierarchy; required by US-4.3.3.                                                                                                                                                                                                            |
+| Must     | Run History Storage                                                | 5.3.2       | Backs the Test History view; required by US-4.3.5.                                                                                                                                                                                                                  |
+| Must     | Screenshots, Logs, and Reports Storage                             | 5.3.2       | Provides visual evidence for diagnosing failures; required by US-4.3.5.                                                                                                                                                                                             |
+| Must     | User Authentication, Account Isolation & Run Rate Limiting         | 5.3.3       | Protects user data and the shared Jev API key; required by US-4.3.7.                                                                                                                                                                                                |
+| Must     | Public API with OpenAPI/Swagger Documentation                      | 5.3.4       | Enables External Agents and CI scripts to integrate programmatically; required by US-4.3.8.                                                                                                                                                                         |
+| Must     | Workspace Sidebar (Project / Module / File Tree)                   | 5.4.1       | Primary navigation for test management in the Web UI; required by US-4.3.3.                                                                                                                                                                                         |
+| Must     | In-Browser YAML File Editor                                        | 5.4.2       | Lets Testers create, edit, upload, validate, and run Test Cases; required by US-4.3.3.                                                                                                                                                                              |
+| Must     | Dashboard: Live Test Process                                       | 5.4.3       | Real-time per-Step status streaming over WebSocket; required by US-4.3.4.                                                                                                                                                                                           |
+| Must     | Dashboard: Test History and Reports                                | 5.4.3       | Historical run browsing and step-level inspection; required by US-4.3.5.                                                                                                                                                                                            |
+| Should   | Dashboard: Files Overview with Latest Status                       | 5.4.3       | Improves at-a-glance test health tracking, but files remain accessible through the sidebar without it.                                                                                                                                                              |
+| Should   | Benchmark Test Suite and Demo App                                  | 5.5         | Needed to measure the Success Metrics and to tune and demo the platform, but not required for the product to function.                                                                                                                                              |
+| Could    | Locating and Assertion Accuracy Optimization                       | —           | Further improve element-locating and assertion-judging accuracy beyond the baseline, for example by tuning Jev Harness prompts and confidence thresholds, preprocessing screenshots, and filtering DOM candidates, using the Benchmark Test Suite to measure gains. |
+| Won't    | Server-Side Test Execution Security and Privacy                    | 3.2         | Implementing security isolation (such as container sandboxing or network restrictions) and sensitive data privacy hardening for tests running on the backend server is out of scope for this version.                                                               |
+
+---
+
+## 7. UI and CLI Overview
+
+### 7.1 Web Pages
 
 The Web UI uses a consistent workspace layout illustrated by the wireframes in [`workspace.svg`](file:///home/dev/workspace/6983/jev-playright/prd/reference/workspace.svg) and [`dashboard.svg`](file:///home/dev/workspace/6983/jev-playright/prd/reference/dashboard.svg), paired with an authentication screen.
 The Web UI uses a consistent workspace layout illustrated by the wireframes in [`workspace.svg`](references/workspace.svg) and [`dashboard.svg`](references/dashboard.svg), paired with an authentication screen.
 
-#### 6.1.1 Login and Register
+#### 7.1.1 Login and Register
 ```text
 +-------------------------------------------------------+
 |          Jevwright — AI Web Testing Platform          |
@@ -286,8 +325,8 @@ The Web UI uses a consistent workspace layout illustrated by the wireframes in [
 ```
 - **Description**: A clean authentication page where users register or sign in with their email address and password. Upon authentication, the user is redirected to the main workspace.
 
-#### 6.1.2 Workspace & `.yaml` File Editor (`reference/workspace.svg`)
-#### 6.1.2 Workspace & `.yaml` File Editor (`references/workspace.svg`)
+#### 7.1.2 Workspace & `.yaml` File Editor (`reference/workspace.svg`)
+#### 7.1.2 Workspace & `.yaml` File Editor (`references/workspace.svg`)
 
 ![YAML File Editor Wireframe](reference/workspace.svg)
 ![YAML File Editor Wireframe](references/workspace.svg)
@@ -295,8 +334,8 @@ The Web UI uses a consistent workspace layout illustrated by the wireframes in [
 - **Left Sidebar (`Project / Module / File Tree & Account`)**: Displays collapsible `project name` → `module name` → `.yaml` files (`test1.yaml`, `test3.yaml`, etc.) for quick navigation and file management, with the `account` control anchored at the bottom.
 - **Main Pane (`.yaml file editor`)**: Provides an in-browser code editor for authoring and uploading `.yaml` test files, inline validation feedback with line numbers, and a **Run** button to launch the test.
 
-#### 6.1.3 Dashboard: Live Test Process, Run History & Reports (`reference/dashboard.svg`)
-#### 6.1.3 Dashboard: Live Test Process, Run History & Reports (`references/dashboard.svg`)
+#### 7.1.3 Dashboard: Live Test Process, Run History & Reports (`reference/dashboard.svg`)
+#### 7.1.3 Dashboard: Live Test Process, Run History & Reports (`references/dashboard.svg`)
 
 ![Dashboard Wireframe](reference/dashboard.svg)
 ![Dashboard Wireframe](references/dashboard.svg)
@@ -309,11 +348,11 @@ The Web UI uses a consistent workspace layout illustrated by the wireframes in [
 
 ---
 
-### 6.2 CLI Commands
+### 7.2 CLI Commands
 
 The local CLI (`jevwright`) provides two primary commands for local development, CI pipelines, and External Agents:
 
-#### 6.2.1 `run` — Execute Local `.yaml` Test Cases
+#### 7.2.1 `run` — Execute Local `.yaml` Test Cases
 - **Usage**:
   ```bash
   jevwright run <file-or-glob> [options]
@@ -335,7 +374,7 @@ The local CLI (`jevwright`) provides two primary commands for local development,
   - Exit code `1`: One or more steps/assertions failed.
   - Exit code `2`: File validation error or missing configuration.
 
-#### 6.2.2 `validate` — Lint and Validate `.yaml` Test Files Without a Browser
+#### 7.2.2 `validate` — Lint and Validate `.yaml` Test Files Without a Browser
 - **Usage**:
   ```bash
   jevwright validate <file-or-glob> [--json]
@@ -354,7 +393,7 @@ The local CLI (`jevwright`) provides two primary commands for local development,
 
 ---
 
-## 7. References
+## 8. References
 
 - **Jev (TypeSafe AI)**: [https://typesafe.ai](https://typesafe.ai)
 - **Playwright**: [https://playwright.dev](https://playwright.dev)
