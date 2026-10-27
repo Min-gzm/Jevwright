@@ -12,9 +12,10 @@ This document describes what the product must do and how users interact with it.
 
 ### 1.3 Document Status and Revision History
 
-| Version | Date       | Author     | Change                     |
-| ------- | ---------- | ---------- | -------------------------- |
-| 0.1     | 2026-10-27 | Zhimin Gan | Initial version of the PRD |
+| Version | Date       | Author              | Change                      |
+| ------- | ---------- | ------------------- | --------------------------- |
+| 0.1     | 2026-10-27 | Zhimin Gan          | Initial version of the PRD  |
+| 0.2     | 2026-10-27 | Zhimin Gan, Yike Li | Added MoSCoW Prioritization |
 
 ### 1.4 Key Concepts
 
