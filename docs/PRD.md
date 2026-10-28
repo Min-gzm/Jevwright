@@ -17,6 +17,7 @@ This document describes what the product must do and how users interact with it.
 | 0.1     | 2026-10-27 | Zhimin Gan          | Initial version of the PRD  |
 | 0.2     | 2026-10-27 | Zhimin Gan, Yike Li | Added MoSCoW Prioritization |
 | 0.3     | 2026-10-29 | Zhimin Gan          | Moved syntax technical details to the Syntax Analyzer technical design |
+| 0.3.1   | 2026-10-29 | Zhimin Gan          | Linked the interactive UI prototype |
 
 ### 1.4 Key Concepts
 
@@ -283,7 +284,7 @@ The Core Module is the shared execution engine used by both the local CLI and th
 
 ### 7.1 Web Pages
 
-The Web UI uses a consistent workspace layout illustrated by the wireframes in [`workspace.svg`](references/workspace.svg) and [`dashboard.svg`](references/dashboard.svg), paired with an authentication screen.
+The Web UI uses a consistent workspace layout illustrated by the wireframes in [`workspace.svg`](references/workspace.svg) and [`dashboard.svg`](references/dashboard.svg), paired with an authentication screen. An interactive UI prototype ([online](https://claude.ai/artifact/9FT2gh18vkLYJsJKYtR499?sk=IOULsiImjRr2Cq0dwfEnVQ), [source](references/ui-prototype.html)) shows the full flow, from login to the editor and dashboard.
 
 #### 7.1.1 Login and Register
 ```text
