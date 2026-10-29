@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Website redesign · Tasklane</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="board.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <rect x="3" y="3" width="18" height="18" rx="4"/><path d="M8 12l3 3 5-6"/>
+      </svg>
+      Tasklane
+    </a>
+    <input class="search" id="search" type="search" placeholder="Search tasks" aria-label="Search tasks">
+    <div class="actions">
+      <button class="icon-btn" id="notifications" aria-label="Notifications">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 01-3.4 0"/>
+        </svg>
+        <span class="badge-count">3</span>
+      </button>
+      <a class="icon-btn" id="settings-link" href="settings.html" aria-label="Settings">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.7 1.7 0 00.3 1.8l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.7 1.7 0 00-1.8-.3 1.7 1.7 0 00-1 1.5V21a2 2 0 11-4 0v-.1a1.7 1.7 0 00-1.1-1.5 1.7 1.7 0 00-1.8.3l-.1.1a2 2 0 11-2.8-2.8l.1-.1a1.7 1.7 0 00.3-1.8 1.7 1.7 0 00-1.5-1H3a2 2 0 110-4h.1a1.7 1.7 0 001.5-1.1 1.7 1.7 0 00-.3-1.8l-.1-.1a2 2 0 112.8-2.8l.1.1a1.7 1.7 0 001.8.3H9a1.7 1.7 0 001-1.5V3a2 2 0 114 0v.1a1.7 1.7 0 001 1.5 1.7 1.7 0 001.8-.3l.1-.1a2 2 0 112.8 2.8l-.1.1a1.7 1.7 0 00-.3 1.8V9a1.7 1.7 0 001.5 1H21a2 2 0 110 4h-.1a1.7 1.7 0 00-1.5 1z"/>
+        </svg>
+      </a>
+      <button class="avatar" id="account-menu" aria-label="Account menu">DM</button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <h3>Projects</h3>
+      <nav aria-label="Projects">
+        <a href="board.html" aria-current="page">Website redesign <span class="count">6</span></a>
+        <a href="#">Mobile app <span class="count">11</span></a>
+        <a href="#">Marketing launch <span class="count">4</span></a>
+      </nav>
+      <button class="btn" id="new-project">+ New project</button>
+    </aside>
+
+    <main class="content">
+      <div class="page-header">
+        <div>
+          <h1>Website redesign</h1>
+          <p class="muted" id="task-summary"></p>
+        </div>
+        <button class="btn btn-primary" id="new-task">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+          New task
+        </button>
+      </div>
+
+      <div class="tabs" role="tablist" aria-label="Filter tasks">
+        <button role="tab" data-filter="all" aria-selected="true">All</button>
+        <button role="tab" data-filter="active" aria-selected="false">Active</button>
+        <button role="tab" data-filter="done" aria-selected="false">Done</button>
+      </div>
+
+      <div class="card">
+        <table>
+          <thead>
+            <tr><th></th><th>Task</th><th>Assignee</th><th>Due</th><th>Priority</th><th>Status</th><th></th></tr>
+          </thead>
+          <tbody id="task-rows"></tbody>
+        </table>
+        <div class="empty" id="empty-state" hidden>
+          <p id="empty-message"></p>
+          <button class="btn" id="clear-search">Clear search</button>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <dialog id="task-dialog" aria-labelledby="task-dialog-title">
+    <form id="task-form" method="dialog">
+      <h2 id="task-dialog-title">New task</h2>
+      <p class="muted">Add a task to Website redesign.</p>
+
+      <label for="task-title">Title</label>
+      <input id="task-title" type="text" placeholder="What needs to be done?">
+
+      <div class="grid">
+        <div>
+          <label for="task-assignee">Assignee</label>
+          <select id="task-assignee">
+            <option value="">Unassigned</option>
+            <option>Dana Miller</option>
+            <option>Leo Park</option>
+            <option>Priya Shah</option>
+          </select>
+        </div>
+        <div>
+          <label for="task-due">Due date</label>
+          <input id="task-due" type="date">
+        </div>
+      </div>
+
+      <label id="priority-label">Priority</label>
+      <div class="radio-group" role="radiogroup" aria-labelledby="priority-label">
+        <label><input type="radio" name="priority" value="low"> Low</label>
+        <label><input type="radio" name="priority" value="medium" checked> Medium</label>
+        <label><input type="radio" name="priority" value="high"> High</label>
+      </div>
+
+      <label for="task-notes">Notes</label>
+      <textarea id="task-notes" placeholder="Optional details"></textarea>
+
+      <div class="dialog-actions">
+        <button type="button" class="btn" id="task-cancel">Cancel</button>
+        <button type="submit" class="btn btn-primary" id="task-create">Create task</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="confirm-dialog" aria-labelledby="confirm-title">
+    <h2 id="confirm-title"></h2>
+    <p class="muted">This cannot be undone.</p>
+    <div class="dialog-actions">
+      <button type="button" class="btn" id="confirm-cancel">Cancel</button>
+      <button type="button" class="btn btn-danger" id="confirm-delete">Delete</button>
+    </div>
+  </dialog>
+
+  <div class="toast" id="toast" role="status" hidden></div>
+
+  <script src="board.js"></script>
+</body>
+</html>

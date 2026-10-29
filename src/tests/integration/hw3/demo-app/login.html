@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sign in · Tasklane</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="auth">
+  <main class="auth-card">
+    <div class="brand">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <rect x="3" y="3" width="18" height="18" rx="4"/><path d="M8 12l3 3 5-6"/>
+      </svg>
+      Tasklane
+    </div>
+    <h1>Sign in to your workspace</h1>
+    <p class="muted">Use demo@example.com / password123</p>
+
+    <div id="login-error" class="alert alert-error" role="alert" hidden>
+      The email or password is incorrect.
+    </div>
+
+    <form id="login-form" novalidate>
+      <label for="email">Email</label>
+      <input id="email" name="email" type="email" placeholder="you@example.com" autocomplete="username">
+
+      <label for="password">Password</label>
+      <div class="password-field">
+        <input id="password" name="password" type="password" placeholder="Enter your password" autocomplete="current-password">
+        <button type="button" id="toggle-password" class="icon-btn" aria-label="Show password">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="row">
+        <label class="checkbox"><input type="checkbox" id="remember" name="remember"> Remember me</label>
+        <a href="#" id="forgot-password">Forgot password?</a>
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-block">Sign in</button>
+    </form>
+
+    <p class="footer muted">No account? <a href="#" id="create-account">Create one</a></p>
+  </main>
+  <script src="login.js"></script>
+</body>
+</html>
