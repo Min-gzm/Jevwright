@@ -1,14 +1,13 @@
 # Integration fixtures
 
-Real page data captured with Playwright from **Tasklane**, a static demo app in [`demo-app/`](demo-app/). Jev Harness tests read these files instead of launching a browser.
+Real page data captured with Playwright from **Tasklane**, a static demo app in [`src/tests/benchmark/demo-app/`](../../benchmark/demo-app/). Jev Harness tests read these files instead of launching a browser.
 
 ## Layout
 
 ```text
 src/tests/integration/hw3/
-├── demo-app/      # login.html, board.html, settings.html (plain HTML/CSS/JS)
 ├── scenarios.ts   # page states to capture, with ground-truth targets and statements
-├── capture.ts     # serves demo-app and writes fixtures/
+├── capture.ts     # serves ../../benchmark/demo-app and writes fixtures/
 └── fixtures/<scenario>/
     ├── screenshot.png   # 1280×800 viewport, the Visual Locate input
     ├── snapshot.json    # interactive elements + visible text, the DOM Locate input

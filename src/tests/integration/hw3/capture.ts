@@ -16,7 +16,7 @@ import { chromium, type Page } from "playwright";
 import { scenarios, type Scenario } from "./scenarios.ts";
 
 const ROOT = import.meta.dirname;
-const APP_DIR = join(ROOT, "demo-app");
+const APP_DIR = join(ROOT, "../../benchmark/demo-app");
 const FIXTURES_DIR = join(ROOT, "fixtures");
 const PORT = 4173;
 const VIEWPORT = { width: 1280, height: 800 };
