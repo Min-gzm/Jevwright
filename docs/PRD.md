@@ -8,7 +8,7 @@ This document defines the product requirements for **Jevwright**, an AI-assisted
 
 ### 1.2 Scope of This Document
 
-This document describes what the product must do and how users interact with it. Technical implementation details (system architecture, database schema, internal API specifications) are covered in separate technical design documents.
+This document describes what the product must do and how users interact with it. Technical implementation details (system architecture, database schema, internal API specifications) are covered in separate technical design documents under [`docs/tech/`](tech/).
 
 ### 1.3 Document Status and Revision History
 
@@ -16,6 +16,8 @@ This document describes what the product must do and how users interact with it.
 | ------- | ---------- | ------------------- | --------------------------- |
 | 0.1     | 2026-10-27 | Zhimin Gan          | Initial version of the PRD  |
 | 0.2     | 2026-10-27 | Zhimin Gan, Yike Li | Added MoSCoW Prioritization |
+| 0.3     | 2026-10-29 | Zhimin Gan          | Moved syntax technical details to the Syntax Analyzer technical design |
+| 0.3.1   | 2026-10-29 | Zhimin Gan          | Linked the interactive UI prototype |
 
 ### 1.4 Key Concepts
 
@@ -24,31 +26,7 @@ This document is written for readers with no prior background, so the core conce
 - **Playwright**: An open-source browser automation framework. Traditional Playwright tests are written as code and locate page elements with brittle selectors such as CSS classes, XPaths, or `data-testid` attributes.
 - **Midscene**: An open-source tool that adds AI to Playwright. It supports both LLM-driven auto-planning (`ai` / `aiAct`) and step-by-step Instant Actions (`aiTap`, `aiInput`, etc.), and can repair failing selectors when a page changes.
 - **Jev**: A lightweight, structured-output model that is significantly faster and cheaper than a general-purpose LLM. Instead of free text, it returns formatted outputs (a choice, a boolean, or a bounding box with a confidence score) and also accepts an image as input.
-- **Test Case (Declarative Test File)**: A declarative test file representing our platform's high-level abstraction layer over Playwright (currently written in `.yaml` for convenience, though any structured format could be used) that verifies one behavior on a target website. Because it abstracts away low-level Playwright APIs, AI coding agents can write test files much faster and with far fewer errors than writing raw Playwright scripts. It consists of root metadata and an ordered list of **Steps**, where each Step is either one **Action** (`open`, `click`, `input`, `press`, `scroll`, `sleep`, or `waitFor`) or one **Assertion** (`assert`). A Step may also include an optional `xpath` selector tried before AI locating. The platform never rewrites a Test Case file.
-
-  *Illustrative Test File Example (`.yaml`):*
-  ```yaml
-  name: "User Login Flow"
-  description: "Verify that a valid user can sign in and reach the dashboard"
-  baseUrl: "https://demo.example.com"
-  timeoutMs: 15000
-  steps:
-    - open: "https://demo.example.com/login"
-    - input:
-        target: "Email address input field"
-        xpath: "//input[@name='email']" # Optional: tried first before Jev Visual/DOM Locate
-        value: "student@example.com"
-    - input:
-        target: "Password input field"
-        value: "demo-password-123"
-    - click:
-        target: "Sign In button"
-    - waitFor:
-        condition: "Dashboard welcome banner is visible"
-        timeoutMs: 5000
-    - assert:
-        statement: "The user dashboard displays the logged-in account navigation"
-  ```
+- **Test Case (Declarative Test File)**: A declarative test file representing our platform's high-level abstraction layer over Playwright (currently written in `.yaml` for convenience, though any structured format could be used) that verifies one behavior on a target website. Because it abstracts away low-level Playwright APIs, AI coding agents can write test files much faster and with far fewer errors than writing raw Playwright scripts. It consists of basic information about the test and an ordered list of **Steps**, where each Step performs one browser **Action** (such as opening a page, clicking, typing, pressing a key, scrolling, or waiting) or one **Assertion** (checking that a condition holds). A Step identifies its element with a selector, a natural-language description, or both; when both are given, the selector is tried before AI locating. The platform never rewrites a Test Case file. The exact syntax is defined in the [Syntax Analyzer technical design](tech/syntax-analyzer.md).
 
 - **Visual Locate (`jev with screenshot`)**: Finding a Step's target element from a page screenshot using Jev.
 - **DOM Locate (`jev with dom`)**: Finding a Step's target element by extracting interactive DOM elements from the page and asking Jev to choose the best match.
@@ -128,15 +106,15 @@ However, existing AI testing tools (such as Midscene) rely on heavy general-purp
 #### 4.3.1 Abstraction Layer Validation
 - **US-4.3.1 (Must)**: *As a Developer or External Agent authoring test files against the Playwright abstraction layer, I want immediate, line-numbered validation errors when a test file violates the schema or syntax rules, so that mistakes are caught instantly before launching a browser.*
   - **Acceptance Criteria**:
-    - **Given** a test file with invalid syntax, missing required keys, multiple actions in a single Step, or unsupported LLM-planning keys (e.g., `ai`, `aiAct`),
+    - **Given** a test file with invalid syntax, missing required keys, multiple actions in a single Step, or unsupported actions such as LLM planning,
     - **When** the file is checked via the Editor, API upload, or `validate` CLI command,
     - **Then** the system rejects the file without starting a browser and returns the exact line number and reason for each error.
 
 #### 4.3.2 Low-Maintenance AI Element Targeting
-- **US-4.3.2 (Must)**: *As a Tester, I want each step to try an optional XPath first, then Jev Visual Locate, and then Jev DOM Locate, so that tests run fast and don't require manual selector maintenance when the UI changes.*
+- **US-4.3.2 (Must)**: *As a Tester, I want each step to try an optional selector first, then Jev Visual Locate, and then Jev DOM Locate, so that tests run fast and don't require manual selector maintenance when the UI changes.*
   - **Acceptance Criteria**:
-    - **Given** a Step with an optional `xpath` that matches an element, **When** the Step executes, **Then** Playwright uses the `xpath` directly without calling Jev.
-    - **Given** a Step without an `xpath` (or whose `xpath` fails to match), **When** the Step executes, **Then** the runner attempts Visual Locate (`jev with screenshot`) and falls back to DOM Locate (`jev with dom`) if needed.
+    - **Given** a Step with a selector that matches an element, **When** the Step executes, **Then** Playwright uses the selector directly without calling Jev.
+    - **Given** a Step with a natural-language description and no selector (or a selector that fails to match), **When** the Step executes, **Then** the runner attempts Visual Locate (`jev with screenshot`) and falls back to DOM Locate (`jev with dom`) if needed.
     - **Given** all locating methods fail, **When** the Step finishes its attempts, **Then** the Step and the Run are marked as `failed` with the failure reason and screenshot recorded.
 
 #### 4.3.3 Test Suite Organization and Authoring
@@ -202,10 +180,10 @@ The Core Module is the shared execution engine used by both the local CLI and th
 - **Page Content Extraction**: Read and extract current page state—such as capturing page screenshots or retrieving the interactive DOM element list—to serve as input for the Locator, Assertion, and Report modules.
 
 #### 5.1.4 Element Locator
-- **Multi-Stage Element Locating**: Locate the target element of a step by trying an optional `xpath/classname` selector first, then Visual Locate (`jev with screenshot`), and finally DOM Locate (`jev with dom`). If all methods fail, the step fails without modifying the test file.
+- **Multi-Stage Element Locating**: Locate the target element of a step by trying an optional selector first, then Visual Locate (`jev with screenshot`), and finally DOM Locate (`jev with dom`). If all methods fail, the step fails without modifying the test file.
 
 #### 5.1.5 Step Execution (Playwright APIs and Assertions)
-- **Actions (`playwright APIs`)**: Execute standard browser actions (`type`/`input`, `click`, `wait`, `open`, `press`, `scroll`, `sleep`) on the page or located element.
+- **Actions (`playwright APIs`)**: Execute standard browser actions (such as opening a page, clicking, typing, pressing a key, scrolling, and waiting) on the page or located element.
 - **Assertions (`assert with playwright/jev`)**: Evaluate whether a stated condition holds true on the page using Playwright or the Jev Harness, marking the step as passed or failed.
 
 #### 5.1.6 Report Generation
@@ -279,7 +257,7 @@ The Core Module is the shared execution engine used by both the local CLI and th
 | Must     | YAML Syntax Definition & Syntax/Validity Check                     | 5.1.1       | Foundation of every Test Case; required by US-4.3.1 and the Validation Accuracy metric.                                                                                                                                                                             |
 | Must     | Jev Harness (Input & Prompt Assembly, Formatted Output Handling)   | 5.1.2       | The only runtime AI component; all Visual/DOM Locate and Jev assertions depend on it.                                                                                                                                                                               |
 | Must     | Browser Lifecycle and Page Inspection                              | 5.1.3       | Provides the browser instance, screenshots, and DOM element list consumed by the Locator, Assertion, and Report modules.                                                                                                                                            |
-| Must     | Multi-Stage Element Locator (`xpath` → Visual Locate → DOM Locate) | 5.1.4       | Core product value of resilient, low-cost locating; required by US-4.3.2.                                                                                                                                                                                           |
+| Must     | Multi-Stage Element Locator (selector → Visual Locate → DOM Locate) | 5.1.4       | Core product value of resilient, low-cost locating; required by US-4.3.2.                                                                                                                                                                                           |
 | Must     | Step Execution (Playwright Actions and Assertions)                 | 5.1.5       | Without action execution and assertion judging, no Test Case can run.                                                                                                                                                                                               |
 | Must     | Report Generation (`.json` report)                                 | 5.1.6       | Required output of every Run for both the CLI and the Web UI.                                                                                                                                                                                                       |
 | Must     | Overall Execution Pipeline (Core Workflow)                         | 5.1.7       | Connects all Core sub-modules into a working end-to-end runner.                                                                                                                                                                                                     |
@@ -306,8 +284,7 @@ The Core Module is the shared execution engine used by both the local CLI and th
 
 ### 7.1 Web Pages
 
-The Web UI uses a consistent workspace layout illustrated by the wireframes in [`workspace.svg`](file:///home/dev/workspace/6983/jev-playright/prd/reference/workspace.svg) and [`dashboard.svg`](file:///home/dev/workspace/6983/jev-playright/prd/reference/dashboard.svg), paired with an authentication screen.
-The Web UI uses a consistent workspace layout illustrated by the wireframes in [`workspace.svg`](references/workspace.svg) and [`dashboard.svg`](references/dashboard.svg), paired with an authentication screen.
+The Web UI uses a consistent workspace layout illustrated by the wireframes in [`workspace.svg`](references/workspace.svg) and [`dashboard.svg`](references/dashboard.svg), paired with an authentication screen. An interactive UI prototype ([online](https://claude.ai/artifact/9FT2gh18vkLYJsJKYtR499?sk=IOULsiImjRr2Cq0dwfEnVQ), [source](references/ui-prototype.html)) shows the full flow, from login to the editor and dashboard.
 
 #### 7.1.1 Login and Register
 ```text
@@ -326,19 +303,15 @@ The Web UI uses a consistent workspace layout illustrated by the wireframes in [
 ```
 - **Description**: A clean authentication page where users register or sign in with their email address and password. Upon authentication, the user is redirected to the main workspace.
 
-#### 7.1.2 Workspace & `.yaml` File Editor (`reference/workspace.svg`)
 #### 7.1.2 Workspace & `.yaml` File Editor (`references/workspace.svg`)
 
-![YAML File Editor Wireframe](reference/workspace.svg)
 ![YAML File Editor Wireframe](references/workspace.svg)
 
 - **Left Sidebar (`Project / Module / File Tree & Account`)**: Displays collapsible `project name` → `module name` → `.yaml` files (`test1.yaml`, `test3.yaml`, etc.) for quick navigation and file management, with the `account` control anchored at the bottom.
 - **Main Pane (`.yaml file editor`)**: Provides an in-browser code editor for authoring and uploading `.yaml` test files, inline validation feedback with line numbers, and a **Run** button to launch the test.
 
-#### 7.1.3 Dashboard: Live Test Process, Run History & Reports (`reference/dashboard.svg`)
 #### 7.1.3 Dashboard: Live Test Process, Run History & Reports (`references/dashboard.svg`)
 
-![Dashboard Wireframe](reference/dashboard.svg)
 ![Dashboard Wireframe](references/dashboard.svg)
 
 - **Left Sidebar**: Shares the same persistent `project name` → `module name` → `.yaml` file tree and `account` entry as the editor view.
@@ -366,7 +339,7 @@ The local CLI (`jevwright`) provides two primary commands for local development,
   ```text
   $ jevwright run ./tests/login.yaml
   [PASS] Step 1: open https://demo.example.com/login (410ms)
-  [PASS] Step 2: input "Email address input field" [xpath] (85ms)
+  [PASS] Step 2: input "Email address input field" [selector] (85ms)
   [PASS] Step 3: click "Sign In button" [visual-locate, conf=0.92] (1420ms)
   [PASS] Step 4: assert "Dashboard welcome banner is visible" [noul=0.95] (980ms)
   ✔ Run PASSED (4/4 steps in 2.90s) — Saved report.json & trace.zip to ./jevwright-reports/
@@ -385,10 +358,11 @@ The local CLI (`jevwright`) provides two primary commands for local development,
 - **Expected Output & Exit Codes**:
   ```text
   $ jevwright validate ./tests/broken.yaml
-  ✖ ./tests/broken.yaml:12:5 — Error: Unknown action key "aiAct" (LLM planning keys are not supported).
-  ✖ ./tests/broken.yaml:18:3 — Error: Step must contain exactly one Action or Assertion, found both "click" and "input".
+  ✖ ./tests/broken.yaml:12:5 — Error: Unknown action "aiAct"
+  ✖ ./tests/broken.yaml:18:3 — Error: Step must contain exactly one action, found "click" and "input"
   Validation FAILED (2 errors).
   ```
+  Error codes and messages are defined in the [Syntax Analyzer technical design](tech/syntax-analyzer.md).
   - Exit code `0`: All specified `.yaml` files conform to the schema.
   - Exit code `2`: One or more validation errors found.
 

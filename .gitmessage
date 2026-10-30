@@ -1,6 +1,8 @@
-
-# <label>: <title>        (label: feature | bug | chore | docs)
+# <type>(<scope>): <summary> (#<issue>)   (whole line ≤ 72 chars)
 #
-# <description>           (optional)
+# <description>           (optional: what changed and why)
 #
-# Close #<issue number>   (optional)
+# type:  feat | fix | docs | test | refactor | chore | ci
+# scope: core, syntax, jev, locator, assert, playwright, cli,
+#        backend, frontend, db, benchmark
+# e.g.   feat(locator): fall back to DOM locate on low confidence (#42)
