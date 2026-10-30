@@ -13,12 +13,12 @@ is plain Playwright. The goal is to be much faster and cheaper than LLM-planning
 
 ### 1.1 Sources of Truth (in priority order)
 
-1. Module design docs in `docs/design/` (e.g. `syntax-analyzer.md`). **These win on technical details.**
-2. `docs/prd/PRD.md` — product scope, user stories, acceptance criteria, MoSCoW priorities.
+1. Module design docs in `docs/tech/` (e.g. `syntax-analyzer.md`). **These win on technical details.**
+2. `docs/PRD.md` — product scope, user stories, acceptance criteria, MoSCoW priorities.
 3. This file — conventions and workflow.
 
 Known PRD drift: the PRD's YAML example uses `xpath`, `open: "<url>"` shorthand, and per-step
-`timeoutMs`. These are **obsolete**. The YAML format is defined only by `docs/design/syntax-analyzer.md`
+`timeoutMs`. These are **obsolete**. The YAML format is defined only by `docs/tech/syntax-analyzer.md`
 (`selector` + `target`, `open: { url }`, root-level `timeoutMs`). Never implement the PRD variant.
 
 ### 1.2 Tech Stack
@@ -45,26 +45,30 @@ Exact versions live in each `package.json`. Do not upgrade major versions withou
 
 ```text
 jevwright/
-├── core/                 # Shared execution engine (no HTTP, no DB, no UI)
-│   ├── src/core/
-│   │   ├── syntax/       # Syntax Analyzer: analyze(source) -> TestCase | Diagnostic[]
-│   │   ├── jev/          # Jev Harness: prompt assembly, OpenRouter calls, output parsing
-│   │   ├── browser/      # Chromium lifecycle, screenshots, interactive DOM extraction
-│   │   ├── locator/      # selector -> Visual Locate -> DOM Locate
-│   │   ├── steps/        # Step execution via Playwright APIs
-│   │   ├── assert/       # Playwright assertions with Jev fallback
-│   │   ├── report/       # JSON report + trace output
-│   │   └── pipeline/     # run(): orchestrates all of the above, emits step events
-│   └── test/             # mirrors src/core/*, plus fixtures/
-├── cli/                  # `jevwright validate` and `jevwright run`
-├── runner/               # Express service: run queue, WebSocket progress, writes DB + Blob
-├── web/                  # Next.js app: auth, sidebar, editor, dashboard, REST API, OpenAPI
-├── db/                   # Prisma schema, migrations, generated client (shared by web + runner)
-├── demo-app/             # Standalone target app for the benchmark suite
-├── benchmark/            # Benchmark .yaml test suite run against demo-app
+├── src/
+│   ├── core/                 # Shared execution engine (no HTTP, no DB, no UI)
+│   │   ├── syntax/           # Syntax Analyzer: analyze(source) -> TestCase | Diagnostic[]
+│   │   ├── jev/              # Jev Harness: prompt assembly, OpenRouter calls, output parsing
+│   │   ├── browser/          # Chromium lifecycle, screenshots, interactive DOM extraction
+│   │   ├── locator/          # selector -> Visual Locate -> DOM Locate
+│   │   ├── playwright/       # Step execution via Playwright APIs
+│   │   ├── assert/           # Playwright assertions with Jev fallback
+│   │   ├── report/           # JSON report + trace output
+│   │   └── pipeline/         # run(): orchestrates all of the above, emits step events
+│   ├── cli/                  # `jevwright validate` and `jevwright run`
+│   ├── app/
+│   │   ├── frontend/         # Next.js app: auth, sidebar, editor, dashboard, REST API, OpenAPI
+│   │   └── backend/          # Express runner service: run queue, WebSocket progress, writes DB + Blob
+│   │       └── db/           # Prisma schema, migrations, generated client (shared by frontend + backend)
+│   └── tests/
+│       ├── unit/             # mirrors src/: unit/core/<module>/, unit/backend/, ...
+│       ├── integration/      # cross-module tests and their fixtures
+│       ├── e2e/              # Playwright Test flows
+│       └── benchmark/        # demo-app/ (target app) + benchmark .yaml suite run against it
 └── docs/
-    ├── prd/              # PRD.md, references/workspace.svg, references/dashboard.svg
-    └── design/           # TEMPLATE.md, structure.png, one <module>.md per Core module
+    ├── PRD.md
+    ├── references/           # workspace.svg, dashboard.svg, arch.svg, ui-prototype.html
+    └── tech/                 # TEMPLATE.md, one <module>.md per Core module
 ```
 
 ### 2.2 Runtime Data Flow
@@ -72,17 +76,17 @@ jevwright/
 - **CLI:** `.yaml` → `core` Syntax Analyzer → Chromium → per step: Locator → Playwright action or
   assertion → report. Writes `report.json`, `trace.zip`, and errors to `--out-dir`
   (default `./jevwright-reports`). Exit codes: `0` pass, `1` step failed, `2` validation/config error.
-- **Web:** user clicks **Run** → `web` API creates a `queued` Run in Postgres → calls `runner` (shared
-  secret header) → runner executes one Run at a time and queues the rest → pushes step events over
+- **Web:** user clicks **Run** → `frontend` API creates a `queued` Run in Postgres → calls `backend` (shared
+  secret header) → backend executes one Run at a time and queues the rest → pushes step events over
   WebSocket → writes results to Postgres and screenshots/traces to Blob.
-- **WebSocket:** hosted by `runner` (Vercel cannot hold sockets). The browser gets a short-lived,
-  Run-scoped token from `web`, then connects directly to `runner`.
+- **WebSocket:** hosted by `backend` (Vercel cannot hold sockets). The browser gets a short-lived,
+  Run-scoped token from `frontend`, then connects directly to `backend`.
 
 ### 2.3 Key Patterns
 
-- **Core is pure and reusable.** `core` must not import from `web`, `runner`, `cli`, or `db`. It reports
+- **Core is pure and reusable.** `core` must not import from `frontend`, `backend`, `cli`, or `db`. It reports
   progress through an event callback/emitter; callers decide where events go (terminal, WebSocket).
-- **Jev is called only from `core/src/core/jev/`.** Locator and Assert modules call the Harness API,
+- **Jev is called only from `src/core/jev/`.** Locator and Assert modules call the Harness API,
   never OpenRouter directly. Every Jev call has bounded retries and returns a confidence score.
 - **Locating order is fixed:** `selector` only → Playwright only, never Jev; `target` only → Visual Locate,
   then DOM Locate; both → `selector` first, Jev on no match. Record which method succeeded.
@@ -90,8 +94,8 @@ jevwright/
   is marked as a fallback pass. `waitFor` uses exactly one of `condition`, `selector`, `url`.
 - **Never rewrite a user's test file.** The platform reads `.yaml`; it never edits or "self-heals" it.
 - **Collect all errors.** The Syntax Analyzer returns every diagnostic with line/column, never only the first.
-- **Adding an action:** add a parse function in `core/src/core/syntax/steps.ts`, register it in the map,
-  add executor support in `steps/`, add valid + invalid fixtures, and update `syntax-analyzer.md`.
+- **Adding an action:** add a parse function in `src/core/syntax/steps.ts`, register it in the map,
+  add executor support in `playwright/`, add valid + invalid fixtures, and update `syntax-analyzer.md`.
 - **Pipeline stops on first failed step** and still produces a complete report.
 
 ## 3. Naming Conventions and Coding Standards
@@ -128,11 +132,11 @@ Coding standards:
 | Package  | Framework                | Required coverage            | What to test                                     |
 | -------- | ------------------------ | ---------------------------- | ------------------------------------------------ |
 | `core`   | Vitest                   | ≥ 80% lines                  | Every module; Syntax Analyzer via fixtures       |
-| `runner` | Vitest + supertest       | ≥ 60% lines                  | Queue order, auth header, event emission         |
+| `backend` | Vitest + supertest      | ≥ 60% lines                  | Queue order, auth header, event emission         |
 | `cli`    | Vitest                   | key paths                    | Output format, `--json`, exit codes 0/1/2        |
-| `web`    | Vitest + Playwright Test | E2E on critical flows        | Login → edit → validate → run → history          |
+| `frontend` | Vitest + Playwright Test | E2E on critical flows        | Login → edit → validate → run → history          |
 
-- Syntax Analyzer fixtures: `core/test/syntax/fixtures/valid/` (at least one per action) and
+- Syntax Analyzer fixtures: `src/tests/integration/syntax/fixtures/valid/` (at least one per action) and
   `fixtures/invalid/` (at least one per error code, named like `E003-missing-value.yaml` with a
   matching `.json` of expected diagnostics). Assert `code`, `line`, and `column`.
 - **Unit tests never call the real Jev API.** Mock the Harness interface. Real Jev calls run only in the
@@ -146,13 +150,13 @@ Useful commands: `pnpm install`, `pnpm dev`, `pnpm --filter core test`, `pnpm te
 
 ## 5. PRD and Design References
 
-- PRD: [`docs/prd/PRD.md`](docs/prd/PRD.md). Check user story acceptance criteria (Section 4.3) and the
+- PRD: [`docs/PRD.md`](docs/PRD.md). Check user story acceptance criteria (Section 4.3) and the
   MoSCoW table (Section 6) before building a feature. Do not build `Won't` items (server-side sandboxing).
-- Architecture diagram: [`docs/design/structure.png`](docs/design/structure.png).
-- Module docs: `docs/design/<module>.md`, written from [`docs/design/TEMPLATE.md`](docs/design/TEMPLATE.md).
+- Architecture diagram: [`docs/references/arch.svg`](docs/references/arch.svg).
+- Module docs: `docs/tech/<module>.md`, written from [`docs/tech/TEMPLATE.md`](docs/tech/TEMPLATE.md).
   If you implement a Core module that has no doc yet, write the doc from the template first and get it
   reviewed in a separate PR.
-- Wireframes: `docs/prd/references/workspace.svg` and `docs/prd/references/dashboard.svg`.
+- Wireframes: `docs/references/workspace.svg` and `docs/references/dashboard.svg`.
 
 ### 5.1 Mockup Descriptions
 
@@ -205,12 +209,13 @@ Examples: `feature/42-dom-locate-fallback`, `fix/57-wrong-column-in-e004`, `docs
 [Conventional Commits](https://www.conventionalcommits.org) with a scope and the issue number:
 
 ```text
-<type>(<scope>): <imperative summary, ≤ 72 chars> (#<issue>)
+<type>(<scope>): <imperative summary> (#<issue>)    # whole line ≤ 72 chars
 ```
 
 - Types: `feat`, `fix`, `docs`, `test`, `refactor`, `chore`, `ci`.
-- Scopes: `core`, `syntax`, `jev`, `locator`, `assert`, `steps`, `cli`, `runner`, `web`, `db`, `demo`.
-- Example: `feat(locator): fall back to DOM locate when visual confidence is low (#42)`.
+- Scopes: `core`, `syntax`, `jev`, `locator`, `assert`, `playwright`, `cli`, `backend`, `frontend`, `db`,
+  `benchmark`.
+- Example: `feat(locator): fall back to DOM locate on low confidence (#42)`.
 - One logical change per commit. Do not mix formatting changes with behavior changes.
 
 ### 6.3 Pull Requests
@@ -232,13 +237,13 @@ Examples: `feature/42-dom-locate-fallback`, `fix/57-wrong-column-in-e004`, `docs
 
 ### 7.1 Do
 
-- Read the issue and the relevant `docs/design/*.md` before writing code; update the doc in the same
+- Read the issue and the relevant `docs/tech/*.md` before writing code; update the doc in the same
   PR when behavior changes.
 - Match the interfaces in design docs exactly (e.g. `analyze(source): AnalyzeResult`).
 - Use the `yaml` library's `parseDocument` + `LineCounter` so every error has a line and column.
 - Use `zod` for REST request bodies, runner messages, and environment variable validation.
 - Use Playwright's auto-waiting locators; use `timeoutMs` from the test case for each step.
-- Use Server Components by default in `web`; add `"use client"` only where interactivity is needed.
+- Use Server Components by default in `frontend`; add `"use client"` only where interactivity is needed.
 - Use shadcn/ui components and Tailwind utilities before writing custom CSS.
 - Use native `fetch`, `node:` built-ins, and the libraries listed in Section 1.2.
 - Ask when a requirement is ambiguous instead of guessing.
