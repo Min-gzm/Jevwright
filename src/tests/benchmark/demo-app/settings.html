@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Settings · Tasklane</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="board.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <rect x="3" y="3" width="18" height="18" rx="4"/><path d="M8 12l3 3 5-6"/>
+      </svg>
+      Tasklane
+    </a>
+    <div class="actions">
+      <a class="btn" href="board.html" id="back-to-board">Back to board</a>
+      <button class="avatar" id="account-menu" aria-label="Account menu">DM</button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <h3>Settings</h3>
+      <nav class="settings-nav" aria-label="Settings sections">
+        <a href="#profile" aria-current="page">Profile</a>
+        <a href="#notifications">Notifications</a>
+        <a href="#activity">Activity</a>
+        <a href="#danger">Danger zone</a>
+      </nav>
+    </aside>
+
+    <main class="content">
+      <div class="page-header">
+        <h1>Settings</h1>
+      </div>
+
+      <form id="settings-form" class="settings-grid">
+        <section class="card" id="profile">
+          <h2>Profile</h2>
+          <label for="full-name">Full name</label>
+          <input id="full-name" type="text" value="Dana Miller">
+
+          <label for="account-email">Email</label>
+          <input id="account-email" type="email" value="demo@example.com" disabled>
+
+          <label for="role">Role</label>
+          <select id="role">
+            <option>Designer</option>
+            <option selected>Product manager</option>
+            <option>Engineer</option>
+          </select>
+
+          <label for="time-zone">Time zone</label>
+          <select id="time-zone">
+            <option>UTC−08:00 Pacific Time</option>
+            <option selected>UTC−05:00 Eastern Time</option>
+            <option>UTC+00:00 London</option>
+            <option>UTC+08:00 Singapore</option>
+          </select>
+        </section>
+
+        <section class="card" id="notifications">
+          <h2>Notifications</h2>
+          <div class="switch-row">
+            <span id="assign-label">Email me when a task is assigned to me</span>
+            <button type="button" role="switch" id="notify-assigned" aria-checked="true" aria-labelledby="assign-label"></button>
+          </div>
+          <div class="switch-row">
+            <span id="summary-label">Send a weekly summary</span>
+            <button type="button" role="switch" id="notify-weekly" aria-checked="false" aria-labelledby="summary-label"></button>
+          </div>
+          <div class="switch-row">
+            <span id="mention-label">Notify me when someone mentions me</span>
+            <button type="button" role="switch" id="notify-mentions" aria-checked="true" aria-labelledby="mention-label"></button>
+          </div>
+        </section>
+
+        <section class="card" id="activity">
+          <h2>Tasks completed per week</h2>
+          <canvas id="activity-chart" width="440" height="150"></canvas>
+        </section>
+
+        <section class="card" id="danger">
+          <h2>Danger zone</h2>
+          <p class="muted">Deleting your account removes all projects and tasks.</p>
+          <button type="button" class="btn btn-outline-danger" id="delete-account">Delete account</button>
+        </section>
+      </form>
+
+      <div class="form-footer">
+        <div id="saved-banner" class="alert alert-success" role="status" hidden>Settings saved.</div>
+        <button type="submit" form="settings-form" class="btn btn-primary" id="save-settings" style="margin-left: auto">Save changes</button>
+      </div>
+    </main>
+  </div>
+
+  <script src="settings.js"></script>
+</body>
+</html>

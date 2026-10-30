@@ -1,0 +1,67 @@
+{
+  "schemaVersion": 1,
+  "ok": false,
+  "command": "finalize",
+  "status": "skipped",
+  "type": "architecture",
+  "quality": "showcase",
+  "specification": {
+    "path": "/home/dev/workspace/6983/Jevwright/.archify/jevwright-architecture/candidate.json",
+    "sha256": "14d143977b92856f77f3790feb003317e97448ac626ee2965abaf72b2b4187e5",
+    "bytes": 7839
+  },
+  "artifact": {
+    "path": "/home/dev/workspace/6983/Jevwright/.archify/jevwright-architecture/index.html",
+    "sha256": "29c2d4969e387f5f562ca61d65faeb382bbb68da2137a84333a09addb7b781e1",
+    "bytes": 864506
+  },
+  "gates": {
+    "validate": "pass",
+    "deliver": "pass",
+    "check": "pass",
+    "browser-check": "skipped"
+  },
+  "failedStage": "browser-check",
+  "diagnostics": [
+    {
+      "code": "viewer/chrome-unavailable",
+      "severity": "warning",
+      "message": "No supported browser found. Install Chrome/Chromium (or Microsoft Edge), or set ARCHIFY_CHROME to its executable path.",
+      "subject": {
+        "artifact": "/home/dev/workspace/6983/Jevwright/.archify/jevwright-architecture/index.html"
+      },
+      "evidence": {
+        "executable": null
+      },
+      "supportedFixes": [
+        "set ARCHIFY_CHROME to a Chrome/Chromium executable (or Microsoft Edge) and rerun browser-check"
+      ]
+    }
+  ],
+  "diagnosticSummary": {
+    "total": 1,
+    "shown": 1,
+    "truncated": false
+  },
+  "evidence": {
+    "receipt": "/home/dev/workspace/6983/Jevwright/.archify/jevwright-architecture/index.finalize.json",
+    "summaryReceipt": "/home/dev/workspace/6983/Jevwright/.archify/jevwright-architecture/index.finalize-summary.json",
+    "browserCheckReceipt": "/home/dev/workspace/6983/Jevwright/.archify/jevwright-architecture/index.browser-check.json"
+  },
+  "update": {
+    "status": "current",
+    "installedVersion": "3.2.0",
+    "availableVersion": "3.2.0",
+    "releaseNotes": null,
+    "checkedAt": "2026-10-29T02:44:40.864Z",
+    "source": "cache",
+    "noticeRequired": false,
+    "noticeText": null
+  },
+  "visualReview": "not-requested",
+  "durationMs": 1236,
+  "browserCheck": {
+    "requested": true,
+    "ran": false
+  }
+}
